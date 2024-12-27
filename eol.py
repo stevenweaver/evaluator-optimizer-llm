@@ -1,4 +1,5 @@
 import llm
+import sys
 
 # Define the evaluator and generator prompts
 evaluator_prompt = """Evaluate this following code implementation for:
@@ -30,14 +31,15 @@ Output your answer concisely in the following format:
 </response>
 """
 
-task = """<user input>
-Implement a Stack with:
-1. push(x)
-2. pop()
-3. getMin()
-All operations should be O(1).
-</user input>
-"""
+# Function to read the task from input
+def read_task(input_source):
+    if input_source == 'stdin':
+        print("Please enter the task (end with EOF):")
+        task = sys.stdin.read().strip()
+    else:
+        with open(input_source, 'r') as file:
+            task = file.read().strip()
+    return task
 
 # Function to generate code based on the generator prompt
 def generate_code(model, prompt, task, context=""):
@@ -75,7 +77,7 @@ def evaluate_code(model, evaluator_prompt, content, task):
     return evaluation, feedback
 
 # Loop function to iterate generate and evaluate process
-def evaluator_optimizer_loop(model):
+def evaluator_optimizer_loop(model, task):
     memory = []
     chain_of_thought = []
 
@@ -101,4 +103,13 @@ def evaluator_optimizer_loop(model):
 # Main execution
 if __name__ == "__main__":
     model = llm.get_model("gpt-4o-mini")  # Change the model as needed
-    evaluator_optimizer_loop(model)
+    
+    # Determine how to read the task
+    if len(sys.argv) > 1:
+        input_source = sys.argv[1]
+    else:
+        input_source = 'stdin'
+    
+    task = read_task(input_source)
+    evaluator_optimizer_loop(model, task)
+
